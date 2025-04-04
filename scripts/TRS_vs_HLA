@@ -1,0 +1,43 @@
+### this plots figure 6 - TRS vs HLA matching
+
+# lead reactivity score for pre-treatment
+load("tumour_reactivity_with_batch_scaled.Rd")
+df->df2_c1
+#df[which(df$cell_type=="CD8.Naive"),]->df2_c1
+
+# tumour reactivity score for post-treatment
+load("tumour_reactivity_with_batch_scaled_C2.Rd")
+df->df2_c2
+#df[which(df$cell_type=="CD8.Naive"),]->df2_c2
+
+c(rep("pre-treatment",2),rep("post-treatment",2))->mat1
+c(1,2,1,2)->mat2
+vector()->mat3
+median(df2_c1[which(df2_c1[,2]==0),1])->mat3[1]
+median(df2_c1[which(df2_c1[,2]==1),1])->mat3[2]
+median(df2_c2[which(df2_c2[,2]==0),1])->mat3[3]
+median(df2_c2[which(df2_c2[,2]==1),1])->mat3[4]
+data.frame(mat1,mat2,mat3)->mat
+colnames(mat)<-c("group","hla_matched","mean")
+#data.frame(rbind(df2_c1,df2_c2),group)->alldf # group is not defined here
+df2_c1$group <- "pre-ICB"
+df2_c2$group <- "post-ICB"
+alldf <- data.frame(rbind(df2_c1,df2_c2))
+
+alldf$hla_matched<-as.factor(alldf$hla_matched)
+
+alldf$group<-factor(alldf$group, levels = c("pre-ICB","post-ICB"))
+
+
+fig <- ggplot(alldf,aes(x=hla_matched,y=score,fill=group))+ 
+  geom_violin(alpha=1)+
+  geom_boxplot(fill="white",alpha=.5,width=.15,, position = position_dodge(width = 0.9))+
+  theme_classic() + theme(text = element_text(size=20, family = "Arial"),legend.position = "none") +
+  scale_y_continuous('Tumour Reactivity Score')+
+  scale_x_discrete('HLA Matching Status')+ 
+  facet_wrap(~group)+
+  scale_fill_manual(values = c("orange","brown4"))
+ggsave(
+"all_scaled.png",
+plot=fig,
+width=10,height=10,dpi=400)
